@@ -1,0 +1,155 @@
+.TH iostat 8 "6 January 2004" "Linux 2.4" "Linux Administrator's Manual"
+
+.SH NAME
+iostat \- report disk I/O statistics
+
+.SH SYNOPSIS
+.B iostat
+[ \fB\-cdDpPxh\fP ] [ \fIdisk\fP ...] [ \fIinterval\fP [ \fIcount\fP ]]
+
+.SH DESCRIPTION
+\fBiostat\fP reports disk I/O statistics. The first line of a report
+gives averages since the last reboot.  Additional lines provide
+information on a sampling period of length \fIinterval\fP.
+\fBiostat\fP can also provide information about CPU activity.
+.PP
+For its operation \fBiostat\fP requires disk I/O statistics counters
+in kernel, which were introduced in 2.4.20.  It is possible to get the
+utility running on 2.2 kernel, but in that case kernel must be
+compiled with sard accounting patch applied.
+
+.SH COMMAND-LINE OPTIONS
+.B
+.IP c
+Print CPU activity statistics.
+.B
+.IP d
+Print terse disk I/O statistics (kps, tps, svc_t) for each disk
+device.
+.B
+.IP D
+Print terse disk utilization statistics (r/w, w/s, %busy) for each
+disk device.
+.B
+.IP p
+Print per partition statistics for each disk, in addition to per
+device statistics.
+.B
+.IP P
+Print only per partition statistics (omit per device statistics).
+.B
+.IP x
+Print extended information. See below for more info.
+.B
+.IP h
+Print short help information on usage.
+.PP
+With no options specified on command line, \fBiostat\fP defaults to
+\fB\-dc 1 1\fP.
+.PP
+You can explicitly specify \fIdisk\fPs for which statistics are to be
+reported. \fIinterval\fP specifies number of seconds between reports
+(a sampling period) and \fIcount\fP specifies how many reports to
+print.
+
+.SH FIELD DESCRIPTIONS
+.B
+.IP device
+name of disk device/partition
+.B
+.IP kps
+total (read + write) transfer rate in kilobytes per second
+.B
+.IP tps
+total (read + write) number of requests per second
+.B
+.IP r/s
+number of reads per second
+.B
+.IP w/s
+number of writes per second
+.B
+.IP us
+percentage of time CPU spent in user mode
+.B
+.IP sy
+percentage of time CPU spent in system mode (in kernel)
+.B
+.IP id
+percentage of time CPU was idle
+.B
+.IP mgr/s
+number of read merges per second (smaller read requests that were
+successfully merged into a bigger one)
+.B
+.IP mgw/s
+number of write merges per second
+.B
+.IP kr/s
+kilobytes read per second
+.B
+.IP kw/s
+kilobytes written per second
+.B
+.IP size
+average size of the requests sent to disk in kilobytes
+.B
+.IP queue
+average number of queued requests
+.B
+.IP wait
+average time to complete a request (includes time spent in queue and
+disk service time)
+.B
+.IP svc_t
+average disk service time in milliseconds
+.B
+.IP %b
+disk utilization, percentage of time disk was busy serving requests
+
+.SH NOTES
+To get I/O counters in 2.4, kernel must be compiled with
+CONFIG_BLK_STATS=y.  After that /proc/partitions has the counters in
+the additional columns.  In 2.6 counters are unconditionally available
+in /proc/diskstats (and also in sysfs virtual filesystem, if you have
+it mounted).
+.PP
+There were significant changes between 2.4 and 2.6 in the I/O
+subsystem.  As a result, some statistic information disappeared in
+2.6.  The translation from a disk address relative to a partition to
+the disk address relative to the host disk happens much earlier.  All
+merges and timings now happen at the disk level rather than at both
+the disk and partition level as in 2.4. Consequently, in 2.6 kernel
+you will see only kilobytes read/written information when looking at
+per partition information. To be honest, showing number of
+reads/writes would be also possible, but numbers are meaningless
+because data is sampled before kernel merges requests, so \fBiostat\fP
+is not reporting it to avoid confusion.
+
+.SH EXAMPLE
+.nf
+iostat -x 1
+...
+		      extended device statistics
+device mgr/s mgw/s   r/s   w/s   kr/s   kw/s size queue  wait svc_t  %b 
+hde     2199     1 147.5   2.0 9378.2   11.9 62.8   1.0   6.6   2.8  42 
+hda        0  2063   0.0 163.4    0.0 8669.3 53.1  90.5 711.3   6.1 100 
+.fi
+
+.SH FILES
+.nf
+/proc/diskstats
+/proc/partitions
+/proc/stat
+/proc/cpuinfo
+.fi
+
+.SH SEE ALSO
+.BR vmstat(1).
+
+.SH AUTHORS
+.nf
+Sard I/O accounting patch written by Stephen C. Tweedie.
+Original \fBiostat\fP utility written by Greg Franks.
+Maintenance by Zlatko Calusic <zlatko@iskon.hr>
+.fi
